@@ -19,6 +19,7 @@ Dự án tập trung vào hiệu năng Backend và tính ứng dụng cao với 
 2.  **Quản lý Đối Tác:** Quản lý thông tin Nhà cung cấp và Khách hàng, hỗ trợ đánh giá mức độ uy tín dựa trên lịch sử giao dịch.
 3.  **Điều phối Vận hành:** Hỗ trợ theo dõi chi tiết đơn hàng, trạng thái các đơn hàng, lộ trình và cập nhật tồn kho thực tế. Hệ thống có trang giao hành riêng dành cho Nhân Viên Giao Hàng.
 4.  **Quản trị & Bảo mật:** Phân quyền người dùng gồm 3 tác nhân chính là Thủ Kho, Kiểm Kho, và Nhân Viên Giao Hàng. Hỗ trợ quản lý thông tin người dùng, bảo mật tài khoản và lưu vết lịch sử hoạt động.
+
     ![Sơ đồ Use Case của hệ thống SmartStock](database/uc-diagram.png)
 
 ## 📋 Hướng dẫn cài đặt
