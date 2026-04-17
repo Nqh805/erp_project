@@ -1,0 +1,126 @@
+package com.example.demo.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.example.demo.entity.Category;
+import com.example.demo.entity.Product;
+import com.example.demo.entity.ProductStatus;
+import com.example.demo.service.CategoryService;
+import com.example.demo.service.ProductService;
+import org.springframework.ui.Model;
+
+@Controller
+@RequestMapping("/products") // localhost:8080/products
+public class ProductController {
+
+    @Autowired
+    private ProductService productService;
+
+    @Autowired
+    private CategoryService categoryService;
+
+    // danh sách sản phẩm
+    @GetMapping("/view") // localhost:8080/products/view
+    public String viewProducts(Model model) {
+        model.addAttribute("products", productService.getAll());
+        return "product_list";
+    }
+
+    // Hiển thị category lên form
+    @GetMapping("/add")
+    public String showAddForm(Model model) {
+        List<Category> parentCategories = categoryService.getAllParentCategories();
+        List<Category> children = categoryService.getAllChildCategories();
+
+        model.addAttribute("parentCategories", parentCategories);
+        model.addAttribute("childCategories", children);
+        model.addAttribute("allStatuses", ProductStatus.values());
+        model.addAttribute("product", new Product());
+
+        return "add_product";
+    }
+
+    // xử lý data form sản phẩm
+    @PostMapping("/add") // localhost:8080/products/add
+    public String addProduct(
+            @ModelAttribute Product product, // gan du lieu vao product neu name trong form trung voi thuoc tinh
+            Model model,
+            @RequestParam(value = "parentCategory", required = false) Long parentId,
+            @RequestParam(value = "productType", required = false) Long childId,
+            @RequestParam(value = "inputNewCategory", required = false) String newParentName,
+            @RequestParam(value = "inputNewType", required = false) String newTypeName,
+            @RequestParam(value = "productImage", required = false) MultipartFile imageFile) {
+        try {
+            // Goi service xu ly category
+            Category finalChildCategory = categoryService.childCategoryProcess(parentId, childId, newParentName,
+                    newTypeName);
+            product.setCategory(finalChildCategory);
+
+            productService.saveProduct(product, imageFile);
+
+            return "redirect:/products/view";
+
+        } catch (RuntimeException e) {
+            // gui message ve view thong qua model
+            model.addAttribute("errorMessage", e.getMessage());
+
+            // load lai data
+            model.addAttribute("parentCategories",
+                    categoryService.getAllParentCategories());
+            model.addAttribute("childCategories",
+                    categoryService.getAllChildCategories());
+            model.addAttribute("allStatuses", ProductStatus.values());
+
+            return "add_product";
+        }
+    }
+
+    // fill du lieu cho form edit
+    @GetMapping("/edit/{id}")
+    public String showEditForm(@PathVariable("id") Long id, Model model) {
+        Product product = productService.getById(id);
+
+        if (product == null) {
+            return "redirect:/products/view"; // load lai data cho trang view neu ko tim thay san pham de edit
+        }
+
+        List<Category> parentCategories = categoryService.getAllParentCategories();
+        List<Category> children = categoryService.getAllChildCategories();
+
+        model.addAttribute("parentCategories", parentCategories);
+        model.addAttribute("childCategories", children);
+        model.addAttribute("allStatuses", ProductStatus.values());
+        model.addAttribute("product", product);
+
+        return "add_product";
+    }
+
+    // update san pham
+    @PostMapping("/edit/{id}")
+    public String updateProduct(@PathVariable("id") Long id,
+            @ModelAttribute("product") Product product,
+            @RequestParam(value = "productImage", required = false) MultipartFile imageFile,
+            @RequestParam(value = "parentCategory", required = false) Long parentId,
+            @RequestParam(value = "productType", required = false) Long childId,
+            @RequestParam(value = "inputNewCategory", required = false) String newParentName,
+            @RequestParam(value = "inputNewType", required = false) String newTypeName) {
+
+        product.setId(id);
+
+        Category finalCategory = categoryService.childCategoryProcess(parentId, childId, newParentName, newTypeName);
+        product.setCategory(finalCategory);
+
+        productService.updateProduct(product, imageFile);
+        return "redirect:/products/view";
+    }
+}

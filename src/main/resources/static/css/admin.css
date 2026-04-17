@@ -1,0 +1,202 @@
+body, html {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  height: 100%;
+  margin: 0;
+}
+
+.app-page {
+  min-height: 100vh;
+  background: #f3f4f6;
+}
+
+/* Navbar brand logo */
+.custom-navbar{
+  background-color: #dbe0e0;
+}
+.navbar-brand img {
+  height: 32px;
+  width: auto;
+  display: block;
+}
+
+/*notification*/
+.dropdown .nav-link i {
+  transition: color 0.2s ease;
+}
+.dropdown .nav-link:hover i {
+  color: #0d6efd; /* xanh bootstrap */
+}
+
+/* search box in navbar */
+.nav-search .input-group {
+  max-width: 480px;
+  margin: 0 auto;
+}
+.nav-search .form-control {
+  border-radius: 999px;
+}
+.nav-search .input-group-text {
+  border-radius: 999px 0 0 999px;
+}
+.nav-search .form-control:focus {
+  box-shadow: none;
+  border-color: #ced4da; /* trùng màu viền mặc định, không xanh */
+}
+
+/* highlight toàn khung tìm kiếm khi hover / nhập */
+.nav-search .input-group {
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.nav-search .input-group:hover,
+.nav-search .input-group:focus-within { 
+  box-shadow: 0 0 0 2px #a2bce2;
+  border-radius: 999px;
+}
+
+/*account*/
+.acc-dropdown {
+  background-color: rgb(238, 236, 236);
+  padding: 6px 12px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 2px rgba(0,0,0,0.08);
+  cursor: pointer;
+}
+.acc-text {
+  display: flex;
+  flex-direction: column;  /* tên trên, role dưới */
+  justify-content: center;     
+  overflow: hidden;
+}
+.acc-dropdown img {
+  width: 30px;
+  object-fit: cover;
+}
+#acc-name {
+  font-weight: 450;
+  white-space: nowrap;   /* tên không xuống dòng */
+  overflow: hidden;
+  text-overflow: ellipsis; /* ... nếu quá dài */
+}
+.acc-dropdown:hover {
+  background-color: #f8fafc;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  transform: translateY(-1px);
+}
+.acc-dropdown small {
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: normal;   /* cho phép xuống dòng */
+}
+
+/*menu*/
+#bdSidebar {
+  min-width: 250px;
+  /* Màu xanh dương sáng từ logo của bạn */
+  background-color: #696e6e !important; /*mau chinh*/
+  height: 100vh; 
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+
+/* Các mục menu chính */
+.mynav li a {
+  color: #ffffff !important;
+  text-decoration: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  border-radius: 5px;
+  padding: 10px 15px;
+  transition: all 0.3s ease;
+}
+
+/* Hiệu ứng hover cho menu chính và khi đang mở dropdown */
+.mynav li a:hover, 
+.mynav li a[aria-expanded="true"] {
+  background: rgba(255, 255, 255, 0.2); /* Sáng hơn một chút trên nền xanh */
+  padding-left: 20px; /* Hiệu ứng trượt nhẹ sang phải */
+}
+
+.mynav li a i {
+  width: 25px;
+  text-align: center;
+  margin-right: 12px;
+}
+
+/* Style cho menu con (Dropdown) */
+.sidebar-dropdown {
+  background: rgba(0, 0, 0, 0.1); /* Làm tối vùng con để dễ phân biệt */
+  border-radius: 5px;
+  margin: 5px 10px; /* Thụt lề một chút cho đẹp */
+}
+
+.sidebar-dropdown .sidebar-link {
+  font-size: 0.9em;
+  padding: 8px 20px;
+  opacity: 0.9;
+}
+
+.sidebar-dropdown .sidebar-link:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Nút Log Out */
+.logout-link {
+  color: #fff !important;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border-radius: 5px;
+  transition: 0.3s;
+  cursor: pointer;
+  margin-top: auto; /* Đẩy xuống dưới cùng nếu dùng flex-column */
+}
+
+/* Hover Log Out: Chuyển sang tông đỏ nhẹ để cảnh báo thoát */
+.logout-link:hover {
+  background: rgba(209, 173, 176, 0.4); 
+  color: #fff;
+}
+
+.logout-link i {
+  width: 25px;
+  text-align: center;
+  margin-right: 12px;
+}
+/* Khi sidebar bị đóng */
+#bdSidebar.toggled {
+  margin-left: -280px; /* Đẩy sidebar ra khỏi màn hình */
+  transition: all 0.3s ease;
+}
+
+/* Hiệu ứng mượt mà cho sidebar */
+#bdSidebar {
+  transition: all 0.3s ease;
+}
+#sidebarToggle{
+  background-color: #f1f4f4;
+  height: 7vh;
+  border-radius: 6px;
+  border-color: #c3c7c7;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+}
+#sidebarToggle:hover{
+  border-color: #454646;
+}
+/* Trên mobile, có thể bạn muốn sidebar mặc định ẩn */
+@media (max-width: 768px) {
+  #bdSidebar {
+      margin-left: -280px;
+  }
+  #bdSidebar.toggled {
+      margin-left: 0;
+  }
+}

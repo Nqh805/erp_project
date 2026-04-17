@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head th:fragment="html_head">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- SimpleLightbox CSS & JS -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/simplelightbox/2.14.0/simple-lightbox.min.css"
+    />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/admin.css}" />
+    <link rel="stylesheet" th:href="@{/css/product.css}" />
+    <!-- Bootstrap icon -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <!-- favicon-->
+    <link rel="icon" type="image/png" th:href="@{/asset/favicon.png}" />
+    <title>Admin Dashboard | Warehouse Management System</title>
+  </head>
+  <body class="app-page">
+    <!--navbar start-->
+    <nav
+      th:fragment="navbar"
+      class="navbar custom-navbar navbar-expand-lg px-3"
+    >
+      <div class="container-fluid d-flex align-items-center">
+        <!-- Logo -->
+        <a class="navbar-brand" th:href="@{/}">
+          <img th:src="@{/asset/text-logo.png}" alt="navbrand" />
+        </a>
+
+        <!-- Right side -->
+        <div class="d-flex align-items-center">
+          <!-- 🔔 Notification -->
+          <div class="dropdown me-3">
+            <a
+              class="nav-link position-relative"
+              href="#"
+              role="button"
+              data-bs-toggle="dropdown"
+            >
+              <i class="bi bi-bell fs-5"></i>
+
+              <!-- Badge -->
+              <span
+                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+              >
+                3
+              </span>
+            </a>
+
+            <!-- Dropdown -->
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><h6 class="dropdown-header">Thông báo</h6></li>
+              <li><a class="dropdown-item" href="#">Đơn hàng mới</a></li>
+              <li><a class="dropdown-item" href="#">Có người đăng ký</a></li>
+              <li><a class="dropdown-item" href="#">Hệ thống cập nhật</a></li>
+            </ul>
+          </div>
+
+          <!-- 👤 User -->
+          <div class="acc-dropdown">
+            <a
+              class="d-flex align-items-center text-decoration-none dropdown-toggle"
+              href="#"
+              data-bs-toggle="dropdown"
+            >
+              <img th:src="@{/asset/avatar.png}" class="rounded-circle me-2" />
+              <div class="acc-text">
+                <span id="acc-name">Huy Nguyen</span>
+              </div>
+            </a>
+
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="#">Hồ Sơ</a></li>
+              <li><a class="dropdown-item" href="#">Cài Đặt</a></li>
+              <li><hr class="dropdown-divider" /></li>
+              <li>
+                <a class="dropdown-item text-danger" href="login.html"
+                  >Đăng Xuất</a
+                >
+              </li>
+            </ul>
+          </div>
+          <!-- User end-->
+        </div>
+      </div>
+    </nav>
+    <!--navbar end-->
+    <!--menu start-->
+    <div class="container-fluid p-0 d-flex">
+      <div
+        th:fragment="sidebar"
+        id="bdSidebar"
+        class="d-flex flex-column flex-shrink-0 p-3 overflow-y-auto text-white offcanvas-md offcanvas-start h-100"
+        style="width: 280px"
+      >
+        <a href="#" class="navbar-brand text-white fs-4 fw-bold m-0 brand-text"
+          >Menu List</a
+        >
+        <hr />
+        <ul class="mynav nav nav-pills flex-column mb-auto">
+          <li class="nav-item mb-1">
+            <a th:href="@{/}"
+              ><i class="fa-solid fa-chart-line"></i> Thống Kê</a
+            >
+          </li>
+
+          <li class="nav-item mb-1">
+            <a th:href="@{/products/view}" id="menu-product">
+              <i class="fa-solid fa-cart-flatbed"></i> Sản Phẩm
+            </a>
+          </li>
+
+          <li class="sidebar-item nav-item mb-1">
+            <a
+              href="#"
+              class="sidebar-link collapsed"
+              data-bs-toggle="collapse"
+              data-bs-target="#order-collapse"
+              aria-expanded="false"
+            >
+              <i class="fa-solid fa-truck-moving"></i>
+              <span class="topic">Đơn Hàng</span>
+            </a>
+            <ul
+              id="order-collapse"
+              class="sidebar-dropdown list-unstyled collapse ps-3"
+            >
+              <li class="sidebar-item">
+                <a href="#" class="sidebar-link">Nhập Kho</a>
+              </li>
+              <li class="sidebar-item">
+                <a href="#" class="sidebar-link">Xuất Kho</a>
+              </li>
+            </ul>
+          </li>
+
+          <li class="sidebar-item nav-item mb-1">
+            <a
+              href="#"
+              class="sidebar-link collapsed"
+              data-bs-toggle="collapse"
+              data-bs-target="#partner-collapse"
+              aria-expanded="false"
+            >
+              <i class="fa-solid fa-handshake"></i>
+              <span class="topic">Đối Tác</span>
+            </a>
+            <ul
+              id="partner-collapse"
+              class="sidebar-dropdown list-unstyled collapse ps-3"
+            >
+              <li class="sidebar-item">
+                <a href="#" class="sidebar-link">Nhà Cung Cấp</a>
+              </li>
+              <li class="sidebar-item">
+                <a href="#" class="sidebar-link">Khách Hàng</a>
+              </li>
+            </ul>
+          </li>
+
+          <li class="sidebar-item nav-item mb-1">
+            <a
+              href="#"
+              class="sidebar-link collapsed"
+              data-bs-toggle="collapse"
+              data-bs-target="#account-collapse"
+              aria-expanded="false"
+            >
+              <i class="fa-solid fa-user-gear"></i>
+              <span class="topic">Tài Khoản</span>
+            </a>
+            <ul
+              id="account-collapse"
+              class="sidebar-dropdown list-unstyled collapse ps-3"
+            >
+              <li class="sidebar-item">
+                <a href="#" class="sidebar-link">Quản Lý</a>
+              </li>
+              <li class="sidebar-item">
+                <a href="#" class="sidebar-link">Hồ Sơ</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+        <hr />
+        <div class="mynav">
+          <a href="login.html" class="d-flex align-items-center logout-link">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Log Out</span>
+          </a>
+        </div>
+      </div>
+    </div>
+    <!--menu end-->
+    <!--custom-->
+  </body>
+</html>

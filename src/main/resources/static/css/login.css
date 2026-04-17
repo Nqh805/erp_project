@@ -1,0 +1,166 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.login-layout {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0; 
+  width: min(1100px, 95%); 
+  margin: auto;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); 
+  border-radius: 12px;
+  overflow: hidden; 
+}
+
+.login-layout--single {
+  width: min(520px, 95%);
+}
+
+.login-card {
+  flex: 1;
+  background-color: #dbeff3; /*main color*/
+  padding: 4rem 3.5rem; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #000000; /*main color text*/
+}
+
+.login-card h2 {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+/* Tùy chỉnh Input trên nền xanh */
+.login-card .form-group {
+  margin-bottom: 1.25rem;
+}
+
+.login-card label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.login-card input[type="text"],
+.login-card input[type="email"],
+.login-card input[type="password"]{
+  width: 100%;
+  padding: 12px 15px;
+  background: rgba(255, 255, 255, 0.15); /* Nền trắng trong suốt nhẹ */
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  color: #fff;
+  box-sizing: border-box;
+}
+
+.login-card input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.login-page .login-card input::placeholder {
+  color: #524f4f;
+  opacity: 1;
+}
+
+/* SỬA CHECKBOX VÀ QUÊN MẬT KHẨU */
+.remember-row {
+  display: flex;
+  justify-content: space-between; /* Đẩy ra 2 đầu */
+  align-items: center;
+  margin-bottom: 2rem;
+  font-size: 0.85rem;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.checkbox-group input {
+  margin: 0;
+  cursor: pointer;
+}
+
+.forgot-link {
+  color: #fff;
+  text-decoration: none;
+  opacity: 0.9;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+  opacity: 1;
+}
+
+/* Nút đăng nhập nổi bật */
+.btn-login {
+  width: 100%;
+  padding: 14px;
+  background-color: #ffffff; /* Nút trắng trên nền xanh */
+  color: #48a1c0;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-login:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-1px);
+}
+
+/* GIỮ NGUYÊN MÀU TRẮNG CHO IMAGE-CARD */
+.image-card {
+  flex: 1.2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff; /* Màu trắng nguyên bản */
+  padding: 2rem;
+}
+
+.image-card img {
+  display: block;
+  width: 85%;
+  height: auto;
+  object-fit: contain;
+}
+
+.login-page .login-card h3 {
+  color: #033835;
+}
+
+.login-page .btn.btn-primary {
+  background-color: #1c6577;
+  border-color: #1c6577;
+  color: #ffffff;
+}
+
+.login-page .btn.btn-primary:hover,
+.login-page .btn.btn-primary:focus {
+  background-color: #093742;
+  border-color: #093742;
+  color: #ffffff;
+}
+
+@media (max-width: 900px) {
+  .login-layout {
+    flex-direction: column;
+    width: 90%;
+  }
+}
