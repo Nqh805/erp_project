@@ -99,4 +99,28 @@ document.addEventListener('DOMContentLoaded', function() {
         captionType: 'alt',    
         fadeSpeed: 200,
     });
+
+    //nut xoa sp
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteForm = document.getElementById('deleteForm');
+
+    if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; 
+            const productId = button.getAttribute('data-product-id'); // lay id tu button xoa vua click
+            
+            // set attribute cho form xoa gui request 
+            deleteForm.setAttribute('action', '/products/delete/' + productId);
+        });
+    }
+
+    // Tìm tất cả các thông báo alert
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(alert) {
+        // Sau 3 giây (3000ms) sẽ tự động đóng
+        setTimeout(function() {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }, 3000);
+    });
 });

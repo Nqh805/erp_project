@@ -116,4 +116,12 @@ public class ProductService {
         // 5. Lưu đối tượng đã cập nhật
         productRepository.save(existingProduct);
     }
+
+    public void deleteProduct(Long id) {
+        if (productRepository.existsById(id)) {
+            productRepository.deleteById(id);
+        } else {
+            throw new RuntimeException("Sản phẩm không tồn tại.");
+        }
+    }
 }
