@@ -15,9 +15,12 @@ public class ProductService {
     @Autowired // goi dependency ProductRepository
     private ProductRepository productRepository;
 
-    // tra ve list product
-    public List<Product> getAll() {
-        return productRepository.findAll();
+    public List<Product> findProduct(String keyword) {
+        // Xử lý logic như kiểm tra keyword trống, trim khoảng trắng...
+        if (keyword == null || keyword.isEmpty()) {
+            return productRepository.findAll();
+        }
+        return productRepository.searchProducts(keyword.toLowerCase());
     }
 
     public Product getById(Long id) {
@@ -25,30 +28,29 @@ public class ProductService {
     }
 
     private String saveImage(MultipartFile imageFile) {
-        // 1. Kiểm tra nếu file trống thì không làm gì cả
         if (imageFile == null || imageFile.isEmpty()) {
             return null;
         }
 
         try {
-            // 2. Xác định thư mục lưu trữ
             String uploadDir = "src/main/resources/static/asset/uploads/";
             java.io.File directory = new java.io.File(uploadDir);
 
-            // 3. Tạo thư mục nếu chưa tồn tại
             if (!directory.exists()) {
                 directory.mkdirs();
             }
 
-            // 4. Tạo tên file duy nhất bằng timestamp để tránh trùng tên ảnh
-            String fileName = System.currentTimeMillis() + "_" + imageFile.getOriginalFilename();
+            String fileName = imageFile.getOriginalFilename();
             java.nio.file.Path filePath = java.nio.file.Paths.get(uploadDir + fileName);
 
-            // 5. Copy file vào thư mục static
+            // neu url da ton tai
+            if (java.nio.file.Files.exists(filePath)) {
+                return "/asset/uploads/" + fileName;
+            }
+            // luu moi
             java.nio.file.Files.copy(imageFile.getInputStream(), filePath,
                     java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
-            // 6. Trả về đường dẫn để lưu vào Database (đường dẫn tương đối cho trình duyệt)
             return "/asset/uploads/" + fileName;
 
         } catch (java.io.IOException e) {

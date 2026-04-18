@@ -39,10 +39,24 @@
       class="navbar custom-navbar navbar-expand-lg px-3"
     >
       <div class="container-fluid d-flex align-items-center">
-        <!-- Logo -->
-        <a class="navbar-brand" th:href="@{/}">
-          <img th:src="@{/asset/text-logo.png}" alt="navbrand" />
-        </a>
+        <div class="d-flex align-items-center">
+          <button
+            class="btn p-0 border-0 me-2"
+            id="sidebarToggle"
+            type="button"
+            style="width: auto"
+          >
+            <i class="bi bi-list fs-4"></i>
+          </button>
+
+          <a class="navbar-brand m-0" th:href="@{/}">
+            <img
+              th:src="@{/asset/text-logo.png}"
+              alt="SmartStock"
+              style="height: 32px"
+            />
+          </a>
+        </div>
 
         <!-- Right side -->
         <div class="d-flex align-items-center">

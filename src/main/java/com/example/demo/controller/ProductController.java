@@ -31,9 +31,14 @@ public class ProductController {
     private CategoryService categoryService;
 
     // danh sách sản phẩm
-    @GetMapping("/view") // localhost:8080/products/view
-    public String viewProducts(Model model) {
-        model.addAttribute("products", productService.getAll());
+    @GetMapping("/view")
+    public String viewProducts(@RequestParam(value = "search", required = false) String keyword, Model model) {
+        List<Product> list;
+
+        list = productService.findProduct(keyword);
+        model.addAttribute("searchKeyword", keyword); // Gửi lại keyword để hiển thị ở ô input
+
+        model.addAttribute("products", list);
         return "product_list";
     }
 
@@ -53,7 +58,7 @@ public class ProductController {
 
     // xử lý data form sản phẩm
     @PostMapping("/add") // localhost:8080/products/add
-    public String addProduct(
+    public String addProduct(RedirectAttributes redirectAttributes,
             @ModelAttribute Product product, // gan du lieu vao product neu name trong form trung voi thuoc tinh
             Model model,
             @RequestParam(value = "parentCategory", required = false) Long parentId,
@@ -69,6 +74,7 @@ public class ProductController {
 
             productService.saveProduct(product, imageFile);
 
+            redirectAttributes.addFlashAttribute("successMessage", "Đã thêm sản phẩm!");
             return "redirect:/products/view";
 
         } catch (RuntimeException e) {
@@ -109,6 +115,7 @@ public class ProductController {
     // update san pham
     @PostMapping("/edit/{id}")
     public String updateProduct(@PathVariable("id") Long id,
+            RedirectAttributes redirectAttributes,
             @ModelAttribute("product") Product product,
             @RequestParam(value = "productImage", required = false) MultipartFile imageFile,
             @RequestParam(value = "parentCategory", required = false) Long parentId,
@@ -118,10 +125,17 @@ public class ProductController {
 
         product.setId(id);
 
-        Category finalCategory = categoryService.childCategoryProcess(parentId, childId, newParentName, newTypeName);
-        product.setCategory(finalCategory);
-
-        productService.updateProduct(product, imageFile);
+        // throw redirect success message
+        try {
+            Category finalCategory = categoryService.childCategoryProcess(parentId, childId, newParentName,
+                    newTypeName);
+            product.setCategory(finalCategory);
+            productService.updateProduct(product, imageFile);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật thông tin sản phẩm!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Không thể cập nhật thông tin sản phẩm: " + e.getMessage());
+        }
         return "redirect:/products/view";
     }
 

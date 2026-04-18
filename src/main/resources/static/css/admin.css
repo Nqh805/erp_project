@@ -200,3 +200,24 @@ body, html {
       margin-left: 0;
   }
 }
+#sidebarToggle {
+    width: 32px !important;
+    height: 32px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+
+    /* Nếu muốn bo góc cho giống hình bạn gửi trước đó */
+    border-radius: 4px; 
+  
+    background-color: #ffffff;
+    box-shadow: none !important;
+    cursor: pointer;
+}
+#sidebarToggle:hover{
+    border: 0.5px solid #6c6d6d !important; 
+}
+#sidebarToggle i {
+    font-size: 1.5rem; /* Điều chỉnh kích thước icon cho khớp với logo */
+}

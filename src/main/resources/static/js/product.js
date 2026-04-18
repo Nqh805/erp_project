@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fadeSpeed: 200,
     });
 
-    //nut xoa sp
+    // logic delete modal
     const deleteModal = document.getElementById('deleteModal');
     const deleteForm = document.getElementById('deleteForm');
 
@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const button = event.relatedTarget; 
             const productId = button.getAttribute('data-product-id'); // lay id tu button xoa vua click
             
-            // set attribute cho form xoa gui request 
+            // set attribute cho form de gui request 
             deleteForm.setAttribute('action', '/products/delete/' + productId);
         });
     }
@@ -122,5 +122,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const bsAlert = new bootstrap.Alert(alert);
             bsAlert.close();
         }, 3000);
+    });
+
+    // search
+    document.getElementById('search-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            let keyword = this.value.trim();
+            // Chuyển hướng về trang view kèm theo tham số search
+            window.location.href = "/products/view?search=" + encodeURIComponent(keyword);
+        }
     });
 });
