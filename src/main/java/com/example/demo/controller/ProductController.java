@@ -32,13 +32,27 @@ public class ProductController {
 
     // danh sách sản phẩm
     @GetMapping("/view")
-    public String viewProducts(@RequestParam(value = "search", required = false) String keyword, Model model) {
-        List<Product> list;
+    public String viewProducts(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long parentId,
+            @RequestParam(required = false) Long childId,
+            Model model) {
 
-        list = productService.findProduct(keyword);
-        model.addAttribute("searchKeyword", keyword); // Gửi lại keyword để hiển thị ở ô input
+        // 1. Thực hiện lọc
+        List<Product> products = productService.findProduct(keyword, parentId, childId);
 
-        model.addAttribute("products", list);
+        // 2. Gửi lại dữ liệu cho bảng
+        model.addAttribute("products", products);
+
+        // 3. Fill dữ liệu cho các ô Select (Giống như bên AddForm)
+        model.addAttribute("parentCategories", categoryService.getAllParentCategories());
+        model.addAttribute("childCategories", categoryService.getAllChildCategories());
+
+        // 4. Giữ lại giá trị đã chọn để hiển thị trên giao diện
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("selectedParent", parentId);
+        model.addAttribute("selectedChild", childId);
+
         return "product_list";
     }
 

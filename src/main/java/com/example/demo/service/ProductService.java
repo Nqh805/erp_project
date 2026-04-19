@@ -15,12 +15,18 @@ public class ProductService {
     @Autowired // goi dependency ProductRepository
     private ProductRepository productRepository;
 
-    public List<Product> findProduct(String keyword) {
-        // Xử lý logic như kiểm tra keyword trống, trim khoảng trắng...
-        if (keyword == null || keyword.isEmpty()) {
-            return productRepository.findAll();
-        }
-        return productRepository.searchProducts(keyword.toLowerCase());
+    public List<Product> findProduct(String keyword, Long parentId, Long childId) {
+        // 1. Tiền xử lý dữ liệu: Trim khoảng trắng nếu keyword không null
+        String cleanKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
+
+        // 2. Chuyển đổi ID: Nếu ID bằng 0 hoặc null thì coi như không lọc (null)
+        // (Đề phòng trường hợp Frontend gửi về giá trị 0)
+        Long pId = (parentId != null && parentId > 0) ? parentId : null;
+        Long cId = (childId != null && childId > 0) ? childId : null;
+
+        // 3. Gọi Repository thực hiện query động
+        // Repository sẽ tự xử lý: nếu cả 3 đều null thì trả về findAll()
+        return productRepository.searchProducts(cleanKeyword, pId, cId);
     }
 
     public Product getById(Long id) {

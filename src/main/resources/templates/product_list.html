@@ -10,21 +10,77 @@
 
       <main class="flex-grow-1 p-4 overflow-y-auto bg-light h-100">
         <h2>Danh sách sản phẩm</h2>
-        <div class="search-add-row">
-          <div class="search-bar">
-            <input
-              type="text"
-              placeholder="Tìm kiếm sản phẩm..."
-              id="search-input"
-            />
-          </div>
-          <div class="add-button">
-            <a
-              th:href="@{/products/add}"
-              class="btn btn-primary"
-              id="add-product-btn"
-              >Thêm Sản Phẩm</a
+        <div class="card mb-4 shadow-sm">
+          <div class="card-body">
+            <form
+              th:action="@{/products/view}"
+              method="get"
+              class="row g-3 align-items-end"
             >
+              <div class="col-md-4">
+                <label for="keyword" class="form-label fw-bold"
+                  >Tìm kiếm nhanh</label
+                >
+                <input
+                  type="text"
+                  name="keyword"
+                  id="keyword"
+                  class="form-control"
+                  placeholder="Tên sản phẩm, mã SKU hoặc mã vạch..."
+                  th:value="${keyword}"
+                />
+              </div>
+
+              <div class="col-md-2">
+                <label for="parentId" class="form-label fw-bold"
+                  >Ngành hàng</label
+                >
+                <select name="parentId" id="parentId" class="form-select">
+                  <option value="">-- Tất cả --</option>
+                  <option
+                    th:each="cat : ${parentCategories}"
+                    th:value="${cat.id}"
+                    th:text="${cat.name}"
+                    th:selected="${cat.id == selectedParent}"
+                  ></option>
+                </select>
+              </div>
+
+              <div class="col-md-2">
+                <label for="childId" class="form-label fw-bold"
+                  >Phân loại</label
+                >
+                <select name="childId" id="childId" class="form-select">
+                  <option value="">-- Tất cả --</option>
+                  <option
+                    th:each="child : ${childCategories}"
+                    th:value="${child.id}"
+                    th:text="${child.name}"
+                    th:selected="${child.id == selectedChild}"
+                  ></option>
+                </select>
+              </div>
+
+              <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                  <i class="bi bi-search"></i> Lọc dữ liệu
+                </button>
+
+                <a
+                  th:href="@{/products/view}"
+                  class="btn btn-outline-secondary"
+                >
+                  Xóa lọc
+                </a>
+
+                <a
+                  th:href="@{/products/add}"
+                  class="btn btn-success text-nowrap"
+                >
+                  <i class="bi bi-plus-lg"></i> Thêm mới
+                </a>
+              </div>
+            </form>
           </div>
         </div>
 
@@ -66,6 +122,7 @@
                 <th scope="col">Tên Sản Phẩm</th>
                 <th scope="col">Mã SKU</th>
                 <th scope="col">Mã Vạch</th>
+                <th scope="col">Ngành Hàng</th>
                 <th scope="col">Phân Loại</th>
                 <th scope="col">Giá Bán</th>
                 <th scope="col">Tồn Kho</th>
@@ -102,6 +159,7 @@
                 <td th:text="${p.skuCode}"></td>
                 <td th:text="${p.barCode}"></td>
 
+                <td th:text="${p.category.parent.name}"></td>
                 <td th:text="${p.category.name}"></td>
 
                 <td

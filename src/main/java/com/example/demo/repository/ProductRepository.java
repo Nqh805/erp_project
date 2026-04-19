@@ -16,8 +16,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     boolean existsByBarCode(String barCode);
 
     @Query("SELECT p FROM Product p WHERE " +
-            "LOWER(p.name) LIKE LOWER(CONCAT('%', :kw, '%')) OR " +
-            "LOWER(p.skuCode) LIKE LOWER(CONCAT('%', :kw, '%')) OR " +
-            "p.barCode LIKE CONCAT('%', :kw, '%')")
-    List<Product> searchProducts(@Param("kw") String keyword);
+            "(:kw IS NULL OR :kw = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :kw, '%')) " +
+            "OR p.skuCode LIKE CONCAT('%', :kw, '%') OR p.barCode LIKE CONCAT('%', :kw, '%')) " +
+            "AND (:pId IS NULL OR p.category.parent.id = :pId) " +
+            "AND (:cId IS NULL OR p.category.id = :cId)")
+    List<Product> searchProducts(@Param("kw") String kw,
+            @Param("pId") Long pId,
+            @Param("cId") Long cId);
 }
