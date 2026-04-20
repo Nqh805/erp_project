@@ -4,7 +4,10 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import com.example.demo.entity.Product;
 import com.example.demo.repository.ProductRepository;
 
@@ -15,18 +18,35 @@ public class ProductService {
     @Autowired // goi dependency ProductRepository
     private ProductRepository productRepository;
 
-    public List<Product> findProduct(String keyword, Long parentId, Long childId) {
-        // 1. Tiền xử lý dữ liệu: Trim khoảng trắng nếu keyword không null
-        String cleanKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
+    public Page<Product> findProduct(String keyword, Long parentId, Long childId,
+            Double minPrice, Double maxPrice,
+            String sortBy, String direction, int pageNum) {
 
-        // 2. Chuyển đổi ID: Nếu ID bằng 0 hoặc null thì coi như không lọc (null)
-        // (Đề phòng trường hợp Frontend gửi về giá trị 0)
+        // 1. Tiền xử lý dữ liệu
+        String cleanKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
         Long pId = (parentId != null && parentId > 0) ? parentId : null;
         Long cId = (childId != null && childId > 0) ? childId : null;
 
-        // 3. Gọi Repository thực hiện query động
-        // Repository sẽ tự xử lý: nếu cả 3 đều null thì trả về findAll()
-        return productRepository.searchProducts(cleanKeyword, pId, cId);
+        // 2. Xử lý logic Sắp xếp (Sorting)
+        Sort.Direction dir = "asc".equalsIgnoreCase(direction) ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+        // Xử lý riêng cho status nếu Huy đã áp dụng logic sort theo Enum Ordinal
+        Sort sort;
+        if ("status".equals(sortBy)) {
+            sort = Sort.by(dir, "status");
+        } else if (sortBy != null && !sortBy.isEmpty()) {
+            sort = Sort.by(dir, sortBy);
+        } else {
+            sort = Sort.by(Sort.Direction.DESC, "id"); // Mặc định ID giảm dần
+        }
+
+        // 3. Khởi tạo Pageable (pageNum truyền vào từ Controller thường là 1, 2, 3...
+        // nhưng Spring tính từ 0 nên phải -1)
+        int pageSize = 10;
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
+
+        // 4. Gọi Repository trả về Page thay vì List
+        return productRepository.searchProducts(cleanKeyword, pId, cId, minPrice, maxPrice, pageable);
     }
 
     public Product getById(Long id) {

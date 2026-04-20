@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,25 +34,41 @@ public class ProductController {
     // danh sách sản phẩm
     @GetMapping("/view")
     public String viewProducts(
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long parentId,
             @RequestParam(required = false) Long childId,
+            @RequestParam(value = "minPrice", required = false) Double minPrice,
+            @RequestParam(value = "maxPrice", required = false) Double maxPrice,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction,
             Model model) {
 
-        // 1. Thực hiện lọc
-        List<Product> products = productService.findProduct(keyword, parentId, childId);
+        // 1. Thực hiện lọc và lấy đối tượng Page (Đặt tên là pageData cho rõ nghĩa)
+        Page<Product> pageData = productService.findProduct(keyword, parentId, childId, minPrice, maxPrice, sortBy,
+                direction, page);
 
-        // 2. Gửi lại dữ liệu cho bảng
-        model.addAttribute("products", products);
+        // 2. Gửi dữ liệu phân trang về cho View
+        model.addAttribute("products", pageData.getContent()); // Lấy danh sách 10 sản phẩm thực tế
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", pageData.getTotalPages());
+        model.addAttribute("totalItems", pageData.getTotalElements());
 
-        // 3. Fill dữ liệu cho các ô Select (Giống như bên AddForm)
+        // 3. Trạng thái sắp xếp
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("direction", direction);
+        model.addAttribute("reverseDirection", direction.equals("asc") ? "desc" : "asc");
+
+        // 4. Đổ dữ liệu cho các bộ lọc (Dropdowns)
         model.addAttribute("parentCategories", categoryService.getAllParentCategories());
         model.addAttribute("childCategories", categoryService.getAllChildCategories());
 
-        // 4. Giữ lại giá trị đã chọn để hiển thị trên giao diện
+        // 5. Giữ lại các giá trị đã nhập để không bị mất khi reload trang
         model.addAttribute("keyword", keyword);
         model.addAttribute("selectedParent", parentId);
         model.addAttribute("selectedChild", childId);
+        model.addAttribute("minPrice", minPrice);
+        model.addAttribute("maxPrice", maxPrice);
 
         return "product_list";
     }

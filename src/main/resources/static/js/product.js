@@ -54,6 +54,34 @@ function removeImage() {
     if (inputFile) inputFile.value = "";
     if (btnRemove) btnRemove.classList.add('d-none');
 }
+document.querySelectorAll('.currency-input').forEach(input => {
+    // Hàm định dạng dùng chung để gọi khi gõ và khi load trang
+    const formatValue = (el) => {
+        let value = el.value.replace(/\D/g, ""); // Chỉ lấy số
+        
+        // Cập nhật giá trị số thực vào ô hidden để gửi về Server
+        const hiddenInputId = el.id.replace('Display', '');
+        const hiddenInput = document.getElementById(hiddenInputId);
+        if (hiddenInput) hiddenInput.value = value;
+
+        if (value !== "") {
+            // Định dạng: 20,000,000
+            el.value = new Intl.NumberFormat('en-US').format(value);
+        } else {
+            el.value = "";
+        }
+    };
+
+    // Chạy định dạng ngay khi load trang (để xử lý dữ liệu từ Thymeleaf đổ ra)
+    if (input.value !== "") {
+        formatValue(input);
+    }
+
+    // Xử lý khi người dùng nhập liệu
+    input.addEventListener('input', function() {
+        formatValue(this);
+    });
+});
 
 // --- KHỞI TẠO TẬP TRUNG ---
 document.addEventListener('DOMContentLoaded', function() {
@@ -124,12 +152,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     });
 
-    // search
-    document.getElementById('search-input').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            let keyword = this.value.trim();
-            // Chuyển hướng về trang view kèm theo tham số search
-            window.location.href = "/products/view?search=" + encodeURIComponent(keyword);
-        }
-    });
+// --- 4. Xử lý Search & Filter đa điều kiện ---
+    const filterForm = document.querySelector('form[action="/products/view"]');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            // Trước khi gửi form, đảm bảo các ô hidden price đã được cập nhật
+            document.querySelectorAll('.currency-input').forEach(input => {
+                const value = input.value.replace(/\D/g, "");
+                const hiddenInputId = input.id.replace('Display', '');
+                const hiddenInput = document.getElementById(hiddenInputId);
+                if (hiddenInput) {
+                    hiddenInput.value = value;
+                }
+            });
+        });
+    }
+
+    // Nút "Xóa lọc" - Đưa các ô Display về trống
+    const btnReset = document.querySelector('a[href="/products/view"]');
+    if (btnReset) {
+        btnReset.addEventListener('click', function() {
+            document.querySelectorAll('.currency-input').forEach(input => {
+                input.value = "";
+            });
+            document.querySelectorAll('input[type="hidden"][id*="Price"]').forEach(hidden => {
+                hidden.value = "";
+            });
+        });
+    }
 });

@@ -31,6 +31,41 @@
                 />
               </div>
 
+              <div class="col-md-4">
+                <label class="form-label fw-bold">Khoảng giá (VNĐ)</label>
+                <div class="input-group">
+                  <input
+                    type="text"
+                    id="minPriceDisplay"
+                    class="form-control currency-input"
+                    placeholder="Từ"
+                    th:value="${minPrice != null ? #numbers.formatInteger(minPrice, 3, 'COMMA') : ''}"
+                  />
+
+                  <span class="input-group-text">-</span>
+
+                  <input
+                    type="text"
+                    id="maxPriceDisplay"
+                    class="form-control currency-input"
+                    placeholder="Đến"
+                    th:value="${maxPrice != null ? #numbers.formatInteger(maxPrice, 3, 'COMMA') : ''}"
+                  />
+
+                  <input
+                    type="hidden"
+                    name="minPrice"
+                    id="minPrice"
+                    th:value="${minPrice}"
+                  />
+                  <input
+                    type="hidden"
+                    name="maxPrice"
+                    id="maxPrice"
+                    th:value="${maxPrice}"
+                  />
+                </div>
+              </div>
               <div class="col-md-2">
                 <label for="parentId" class="form-label fw-bold"
                   >Ngành hàng</label
@@ -124,22 +159,64 @@
                 <th scope="col">Mã Vạch</th>
                 <th scope="col">Ngành Hàng</th>
                 <th scope="col">Phân Loại</th>
-                <th scope="col">Giá Bán</th>
-                <th scope="col">Tồn Kho</th>
-                <th scope="col">Đặt Trước</th>
-                <th scope="col">Trạng Thái</th>
+                <th scope="col" class="text-nowrap">
+                  Giá Bán
+                  <a
+                    th:href="@{/products/view(keyword=${keyword}, parentId=${parentId}, childId=${childId}, minPrice=${minPrice}, maxPrice=${maxPrice}, sortBy='basePrice', direction=${reverseDirection})}"
+                    class="btn btn-xs p-0 ms-1"
+                  >
+                    <i
+                      th:class="${sortBy == 'basePrice' && direction == 'asc' ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'}"
+                    ></i>
+                  </a>
+                </th>
+
+                <th scope="col" class="text-nowrap">
+                  Tồn Kho
+                  <a
+                    th:href="@{/products/view(keyword=${keyword}, parentId=${parentId}, childId=${childId}, sortBy='quantityStock', direction=${reverseDirection})}"
+                    class="btn btn-xs p-0 ms-1"
+                  >
+                    <i
+                      th:class="${sortBy == 'quantityStock' && direction == 'asc' ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'}"
+                    ></i>
+                  </a>
+                </th>
+
+                <th scope="col" class="text-nowrap">
+                  Đặt Trước
+                  <a
+                    th:href="@{/products/view(keyword=${keyword}, parentId=${parentId}, childId=${childId}, sortBy='reservedQuantity', direction=${reverseDirection})}"
+                    class="btn btn-xs p-0 ms-1"
+                  >
+                    <i
+                      th:class="${sortBy == 'reservedQuantity' && direction == 'asc' ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'}"
+                    ></i>
+                  </a>
+                </th>
+                <th scope="col" class="text-nowrap">
+                  Trạng Thái
+                  <a
+                    th:href="@{/products/view(keyword=${keyword}, parentId=${parentId}, childId=${childId}, sortBy='status', direction=${reverseDirection})}"
+                    class="btn btn-xs p-0 ms-1"
+                  >
+                    <i
+                      th:class="${sortBy == 'status' && direction == 'asc' ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'}"
+                    ></i>
+                  </a>
+                </th>
                 <th scope="col">Mô Tả</th>
                 <th scope="col">Thao Tác</th>
               </tr>
             </thead>
             <tbody>
               <tr th:each="p, state : ${products}">
-                <td th:text="${state.index + 1}"></td>
+                <td th:text="${(currentPage - 1) * 10 + state.index + 1}"></td>
                 <td class="align-middle text-center">
                   <a
                     th:href="${p.imgURL}"
                     class="product-gallery"
-                    th:if="${p.imgURL != null}"
+                    th:if="${p.imgURL != null && p.imgURL != ''}"
                   >
                     <img
                       th:src="${p.imgURL}"
@@ -152,7 +229,7 @@
                     src="/asset/images/no-image.png"
                     id="no-image"
                     alt="No Image"
-                    th:unless="${p.imgURL != null}"
+                    th:if="${p.imgURL == null || p.imgURL == ''}"
                   />
                 </td>
                 <td th:text="${p.name}"></td>
@@ -205,6 +282,49 @@
               </tr>
             </tbody>
           </table>
+          <nav
+            th:if="${totalPages > 1}"
+            aria-label="Page navigation"
+            class="mt-4"
+          >
+            <ul class="pagination justify-content-center pagination-sm">
+              <li
+                class="page-item"
+                th:classappend="${currentPage == 1} ? 'disabled'"
+              >
+                <a
+                  class="page-link"
+                  th:href="@{/products/view(page=${currentPage - 1}, keyword=${keyword}, parentId=${parentId}, childId=${childId}, minPrice=${minPrice}, maxPrice=${maxPrice}, sortBy=${sortBy}, direction=${direction})}"
+                >
+                  <i class="bi bi-chevron-left"></i> Trước
+                </a>
+              </li>
+
+              <li
+                class="page-item"
+                th:each="i : ${#numbers.sequence(1, totalPages)}"
+                th:classappend="${currentPage == i} ? 'active'"
+              >
+                <a
+                  class="page-link"
+                  th:href="@{/products/view(page=${i}, keyword=${keyword}, parentId=${parentId}, childId=${childId}, minPrice=${minPrice}, maxPrice=${maxPrice}, sortBy=${sortBy}, direction=${direction})}"
+                  th:text="${i}"
+                ></a>
+              </li>
+
+              <li
+                class="page-item"
+                th:classappend="${currentPage == totalPages} ? 'disabled'"
+              >
+                <a
+                  class="page-link"
+                  th:href="@{/products/view(page=${currentPage + 1}, keyword=${keyword}, parentId=${parentId}, childId=${childId}, minPrice=${minPrice}, maxPrice=${maxPrice}, sortBy=${sortBy}, direction=${direction})}"
+                >
+                  Sau <i class="bi bi-chevron-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
         </div>
       </main>
     </div>
