@@ -1,107 +1,231 @@
-// --- 1. Hàm Toggle (Ngành hàng/Loại sản phẩm) ---
-function setupToggle(checkboxId, inputId, selectId) {
-    const checkbox = document.getElementById(checkboxId);
-    const input = document.getElementById(inputId);
-    const select = document.getElementById(selectId);
-    
-    if (!checkbox || !input || !select) return;
+// HÀM LOAD CHILD CATEGORIES THEO PARENT
+function loadChildCategories() {
+    const parentId = document.getElementById('parentCategory').value;
+    if (!parentId) {
+        // Nếu không chọn parent, reset child dropdown
+        document.getElementById('productType').innerHTML = '<option value="" selected disabled>Chọn loại sản phẩm...</option>';
+        return;
+    }
 
-    checkbox.addEventListener('change', function() {
+    // Gửi parent ID lên server để lấy child categories
+    fetch('/products/get-child-categories', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'parentId=' + encodeURIComponent(parentId)
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+    })
+    .then(data => {
+        // Cập nhật dropdown child categories
+        const selectChild = document.getElementById('productType');
+        selectChild.innerHTML = '<option value="" selected disabled>Chọn loại sản phẩm...</option>';
+        data.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = category.name;
+            selectChild.appendChild(option);
+        });
+    })
+    .catch(error => console.error('Lỗi tải loại sản phẩm:', error));
+}
+
+// modal chi tiết sản phẩm
+function openDetailModal(row) {
+    // 1. Lấy dữ liệu từ các thẻ data-* và đổ vào giao diện Modal
+    document.getElementById('detailName').textContent = row.getAttribute('data-name');
+    document.getElementById('detailCategory').textContent = row.getAttribute('data-category');
+    document.getElementById('detailBrand').textContent = row.getAttribute('data-brand') || 'N/A';
+    document.getElementById('detailSku').textContent = row.getAttribute('data-sku');
+    document.getElementById('detailBarcode').textContent = row.getAttribute('data-barcode');
+    
+    // Xử lý format tiền tệ (thêm dấu chấm phân cách hàng nghìn)
+    let price = parseFloat(row.getAttribute('data-price') || 0);
+    document.getElementById('detailPrice').textContent = price.toLocaleString('vi-VN') + ' VNĐ';
+    
+    document.getElementById('detailTax').textContent = row.getAttribute('data-tax') + '%';
+    document.getElementById('detailUnit').textContent = row.getAttribute('data-unit');
+    document.getElementById('detailWarranty').textContent = row.getAttribute('data-warranty') + ' tháng';
+
+    // tổng tồn kho
+    let qty = parseInt(row.getAttribute('data-qty') || 0);
+    let minStock = parseInt(row.getAttribute('data-minstock') || 0);
+    let qtyElement = document.getElementById('detailQty');
+    
+    // Gán giá trị số lượng
+    qtyElement.textContent = qty;
+    
+    // Xóa các class màu cũ để tránh bị đè màu khi click qua lại giữa các dòng
+    qtyElement.className = ''; 
+
+    // Đổi màu chữ theo số lượng dựa trên mức tồn kho tối thiểu
+    if (qty <= 0) {
+        qtyElement.classList.add('text-danger'); // Màu đỏ (Hết hàng)
+    } else if (qty <= minStock) {
+        qtyElement.classList.add('text-warning'); // Màu vàng/cam (Sắp hết)
+    } else {
+        qtyElement.classList.add('text-success'); // Màu xanh lá (Còn hàng)
+    }
+
+
+    document.getElementById('detailMinStock').textContent = minStock;
+    document.getElementById('detailDesc').textContent = row.getAttribute('data-desc') || 'Không có mô tả';
+    document.getElementById('detailSpecs').textContent = row.getAttribute('data-specs') || 'Không có thông số kỹ thuật';
+
+    // 2. Xử lý logic hiển thị Hình ảnh
+    let imgUrl = row.getAttribute('data-img');
+    if (!imgUrl || imgUrl.trim() === '') {
+        imgUrl = '/asset/images/no-image.png'; // Ảnh mặc định nếu không có
+    }
+    document.getElementById('detailImg').src = imgUrl;
+
+    // 3. Cập nhật đường link cho nút "Chỉnh sửa" trong Modal
+    let productId = row.getAttribute('data-id');
+    document.getElementById('detailEditBtn').href = '/products/edit/' + productId;
+
+    // 4. Kích hoạt hiển thị Modal của Bootstrap
+    var detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
+    detailModal.show();
+}
+// HÀM XỬ LÝ TOGGLE NGÀNH HÀNG & LOẠI SẢN PHẨM
+function setupCategoryToggles() {
+    const chkNewParent = document.getElementById('checkNewCategory');
+    const inputNewParent = document.getElementById('inputNewCategory');
+    const selectParent = document.getElementById('parentCategory');
+
+    const chkNewChild = document.getElementById('checkNewType');
+    const inputNewChild = document.getElementById('inputNewType');
+    const selectChild = document.getElementById('productType');
+
+    if (!chkNewParent || !chkNewChild) return;
+
+    // 1. Khi tích chọn "Thêm Ngành Hàng Mới"
+    chkNewParent.addEventListener('change', function() {
         if (this.checked) {
-            input.disabled = false;
-            input.focus();
-            input.required = true;
-            select.required = false;
-            select.disabled = true;
-            select.value = "";
+            // Khóa cả 2 ô Select Dropdown
+            selectParent.disabled = true;
+            selectParent.required = false;
+            selectParent.value = "";
+
+            selectChild.disabled = true;
+            selectChild.required = false;
+            selectChild.value = "";
+
+            // Mở ô nhập Ngành hàng mới
+            inputNewParent.disabled = false;
+            inputNewParent.required = true;
+            inputNewParent.focus();
+
+            // Tự động tích chọn và bắt buộc nhập "Loại SP mới" (vì ngành hàng mới phải đi kèm loại SP mới)
+            chkNewChild.checked = true;
+            chkNewChild.disabled = true; // Khóa checkbox không cho người dùng tự tắt
+            inputNewChild.disabled = false;
+            inputNewChild.required = true;
+
         } else {
-            input.disabled = true;
-            input.value = "";
-            input.required = false;
-            select.required = true;
-            select.disabled = false;
+            // Khi BỎ chọn: Trả lại trạng thái bình thường cho Dropdown Ngành hàng
+            selectParent.disabled = false;
+            selectParent.required = true;
+            
+            inputNewParent.disabled = true;
+            inputNewParent.required = false;
+            inputNewParent.value = "";
+
+            // Mở khóa checkbox Loại SP mới để user tự do thao tác lại
+            chkNewChild.disabled = false;
+            chkNewChild.checked = false; 
+            
+            // Khôi phục trạng thái mặc định của Loại SP
+            selectChild.disabled = false;
+            selectChild.required = true;
+            inputNewChild.disabled = true;
+            inputNewChild.required = false;
+            inputNewChild.value = "";
+        }
+    });
+
+    // 2. Khi chỉ tích chọn "Thêm Loại SP Mới" (Thêm loại con cho Ngành hàng đã có)
+    chkNewChild.addEventListener('change', function() {
+        // Chỉ xử lý nếu không bị khóa bởi checkNewParent
+        if (!this.disabled) {
+            if (this.checked) {
+                // Chỉ khóa Dropdown Loại Sản Phẩm
+                selectChild.disabled = true;
+                selectChild.required = false;
+                selectChild.value = "";
+                
+                inputNewChild.disabled = false;
+                inputNewChild.required = true;
+                inputNewChild.focus();
+            } else {
+                selectChild.disabled = false;
+                selectChild.required = true;
+                
+                inputNewChild.disabled = true;
+                inputNewChild.required = false;
+                inputNewChild.value = "";
+            }
         }
     });
 }
 
-// --- 2. Hàm sinh mã vạch EAN-13 ---
-function generateEAN13() {
-    // Tạo 12 số đầu bắt đầu bằng "20"
-    let code12 = "20";
-    for (let i = 0; i < 10; i++) {
-        code12 += Math.floor(Math.random() * 10);
-    }
-
-    // Thuật toán tính Check Digit (Modulo 10)
-    let sum = 0;
-    for (let i = 0; i < 12; i++) {
-        let digit = parseInt(code12[i]);
-        // Vị trí 1, 3, 5... (index 0, 2, 4) nhân 1
-        // Vị trí 2, 4, 6... (index 1, 3, 5) nhân 3
-        sum += (i % 2 === 0) ? digit : digit * 3;
-    }
-    
-    let mod = sum % 10;
-    let checkDigit = (mod === 0) ? 0 : 10 - mod;
-    
-    return code12 + checkDigit;
-}
-
-// --- 3. Hàm xóa ảnh ---
+// Hàm xóa ảnh
 function removeImage() {
     const inputFile = document.getElementById('productImage');
     const btnRemove = document.getElementById('btnRemoveImage');
     if (inputFile) inputFile.value = "";
     if (btnRemove) btnRemove.classList.add('d-none');
 }
-document.querySelectorAll('.currency-input').forEach(input => {
-    // Hàm định dạng dùng chung để gọi khi gõ và khi load trang
-    const formatValue = (el) => {
-        let value = el.value.replace(/\D/g, ""); // Chỉ lấy số
-        
-        // Cập nhật giá trị số thực vào ô hidden để gửi về Server
-        const hiddenInputId = el.id.replace('Display', '');
-        const hiddenInput = document.getElementById(hiddenInputId);
-        if (hiddenInput) hiddenInput.value = value;
 
-        if (value !== "") {
-            // Định dạng: 20,000,000
-            el.value = new Intl.NumberFormat('en-US').format(value);
-        } else {
-            el.value = "";
-        }
-    };
+// Khởi tạo mỗi lần load trang
+document.addEventListener('DOMContentLoaded', function() {
+    setupCategoryToggles();
 
-    // Chạy định dạng ngay khi load trang (để xử lý dữ liệu từ Thymeleaf đổ ra)
-    if (input.value !== "") {
-        formatValue(input);
+    // Load child categories khi chọn parent category
+    const parentCategorySelect = document.getElementById('parentCategory');
+    if (parentCategorySelect) {
+        parentCategorySelect.addEventListener('change', loadChildCategories);
     }
 
-    // Xử lý khi người dùng nhập liệu
-    input.addEventListener('input', function() {
-        formatValue(this);
+    // Format tiền tệ
+    document.querySelectorAll('.currency-input').forEach(input => {
+        const formatValue = (el) => {
+            let value = el.value.replace(/\D/g, ""); 
+            const hiddenInputId = el.id.replace('Display', '');
+            const hiddenInput = document.getElementById(hiddenInputId);
+            if (hiddenInput) hiddenInput.value = value;
+            el.value = value !== "" ? new Intl.NumberFormat('en-US').format(value) : "";
+        };
+        if (input.value !== "") formatValue(input);
+        input.addEventListener('input', function() { formatValue(this); });
     });
-});
 
-// --- KHỞI TẠO TẬP TRUNG ---
-document.addEventListener('DOMContentLoaded', function() {
-    // Khởi tạo Toggle
-    setupToggle('checkNewCategory', 'inputNewCategory', 'parentCategory');
-    setupToggle('checkNewType', 'inputNewType', 'productType');
-
-    // Khởi tạo sự kiện sinh mã vạch
+    // gọi API sinh barcode
     const btnBarcode = document.getElementById('btnGenerateBarcode');
     const inputBarcode = document.getElementById('barCode');
-
     if (btnBarcode && inputBarcode) {
         btnBarcode.addEventListener('click', function() {
-            const newBarcode = generateEAN13();
-            inputBarcode.value = newBarcode;
+            fetch('/products/generate-barcode') 
+                .then(response => {
+                    if (!response.ok) throw new Error('Lỗi kết nối máy chủ');
+                    return response.text();
+                })
+                .then(newBarcode => {
+                    inputBarcode.value = newBarcode;
+                    inputBarcode.classList.add('is-valid'); 
+                    setTimeout(() => inputBarcode.classList.remove('is-valid'), 2000); 
+                })
+                .catch(error => {
+                    console.error('Lỗi:', error);
+                    alert('Có lỗi xảy ra khi sinh mã vạch!');
+                });
         });
     }
 
-
-    // Khởi tạo sự kiện hiện nút xóa ảnh
+    // Nút xóa ảnh
     const inputFile = document.getElementById('productImage');
     const btnRemove = document.getElementById('btnRemoveImage');
     if (inputFile && btnRemove) {
@@ -114,70 +238,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Khởi tạo SimpleLightbox
-    var lightbox = new SimpleLightbox('.product-gallery', {
-        // --- Các tùy chọn (Options) ---
-        overlayOpacity: 0.8,
-        docClose: true,
-        swipeClose: true, //vuốt trên thiết bị di động
-        fileExt: 'png|jpg|jpeg|gif', 
-        closeText: '×',
-        close: true,             
-        captionSelector: 'self', 
-        captionType: 'alt',    
-        fadeSpeed: 200,
-    });
-
-    // logic delete modal
+    // Modal xóa
     const deleteModal = document.getElementById('deleteModal');
     const deleteForm = document.getElementById('deleteForm');
-
     if (deleteModal) {
         deleteModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget; 
-            const productId = button.getAttribute('data-product-id'); // lay id tu button xoa vua click
-            
-            // set attribute cho form de gui request 
+            const productId = button.getAttribute('data-product-id');
             deleteForm.setAttribute('action', '/products/delete/' + productId);
         });
     }
 
-    // Tìm tất cả các thông báo alert
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(function(alert) {
-        // Sau 3 giây (3000ms) sẽ tự động đóng
+    // Tự động đóng Alert
+    document.querySelectorAll('.alert').forEach(function(alert) {
         setTimeout(function() {
             const bsAlert = new bootstrap.Alert(alert);
             bsAlert.close();
         }, 3000);
     });
 
-// --- 4. Xử lý Search & Filter đa điều kiện ---
-    const filterForm = document.querySelector('form[action="/products/view"]');
-    if (filterForm) {
-        filterForm.addEventListener('submit', function(e) {
-            // Trước khi gửi form, đảm bảo các ô hidden price đã được cập nhật
-            document.querySelectorAll('.currency-input').forEach(input => {
-                const value = input.value.replace(/\D/g, "");
-                const hiddenInputId = input.id.replace('Display', '');
-                const hiddenInput = document.getElementById(hiddenInputId);
-                if (hiddenInput) {
-                    hiddenInput.value = value;
-                }
-            });
-        });
-    }
-
-    // Nút "Xóa lọc" - Đưa các ô Display về trống
-    const btnReset = document.querySelector('a[href="/products/view"]');
-    if (btnReset) {
-        btnReset.addEventListener('click', function() {
-            document.querySelectorAll('.currency-input').forEach(input => {
-                input.value = "";
-            });
-            document.querySelectorAll('input[type="hidden"][id*="Price"]').forEach(hidden => {
-                hidden.value = "";
-            });
-        });
-    }
+    // hover canh bao ton kho
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
 });

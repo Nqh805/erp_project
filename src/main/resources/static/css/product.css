@@ -69,3 +69,8 @@
 .form-control:focus {
     box-shadow: 0 0 0 2px rgba(53, 182, 83, 0.2);
 }
+
+/* Làm riêng đường kẻ dưới của tiêu đề đậm hơn một chút để phân cách */
+.table thead th {
+    border-bottom: 2px solid #a7a6a6 !important;
+}

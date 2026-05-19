@@ -11,8 +11,18 @@ public class HomeController {
         return "dashboard"; // dashboard.html
     }
 
-    @GetMapping("/dashboard") // localhost:8080/dashboard
+    @GetMapping("/dashboard")
     public String indexPage() {
         return "dashboard";
+    }
+
+    @GetMapping("/login")
+    public String loginPage() {
+        return "login";
+    }
+
+    @GetMapping("/reset_password")
+    public String resetPassPage() {
+        return "reset_password";
     }
 }

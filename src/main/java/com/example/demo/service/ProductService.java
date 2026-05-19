@@ -1,6 +1,8 @@
 package com.example.demo.service;
 
 import java.util.List;
+import java.util.Random;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -8,44 +10,47 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import com.example.demo.entity.Product;
+
+import com.example.demo.entity.Product.Product;
+import com.example.demo.entity.Product.ProductStatus;
+import com.example.demo.repository.ImportBatchRepository;
 import com.example.demo.repository.ProductRepository;
 
 //service: chua logic xu ly du lieu, goi repository de tuong tac database, tra ve ket qua cho controller
 @Service
 public class ProductService {
 
-    @Autowired // goi dependency ProductRepository
+    @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private ImportBatchRepository importBatchRepository;
+
+    // tim va tra ve danh sach sort theo id giam dan
     public Page<Product> findProduct(String keyword, Long parentId, Long childId,
             Double minPrice, Double maxPrice,
             String sortBy, String direction, int pageNum) {
 
-        // 1. Tiền xử lý dữ liệu
         String cleanKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
         Long pId = (parentId != null && parentId > 0) ? parentId : null;
         Long cId = (childId != null && childId > 0) ? childId : null;
 
-        // 2. Xử lý logic Sắp xếp (Sorting)
         Sort.Direction dir = "asc".equalsIgnoreCase(direction) ? Sort.Direction.ASC : Sort.Direction.DESC;
 
-        // Xử lý riêng cho status nếu Huy đã áp dụng logic sort theo Enum Ordinal
         Sort sort;
         if ("status".equals(sortBy)) {
             sort = Sort.by(dir, "status");
         } else if (sortBy != null && !sortBy.isEmpty()) {
             sort = Sort.by(dir, sortBy);
         } else {
-            sort = Sort.by(Sort.Direction.DESC, "id"); // Mặc định ID giảm dần
+            sort = Sort.by(Sort.Direction.DESC, "id");
         }
 
-        // 3. Khởi tạo Pageable (pageNum truyền vào từ Controller thường là 1, 2, 3...
-        // nhưng Spring tính từ 0 nên phải -1)
+        // Khởi tạo Pageable
         int pageSize = 10;
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
 
-        // 4. Gọi Repository trả về Page thay vì List
+        // Gọi Repository trả về Page
         return productRepository.searchProducts(cleanKeyword, pId, cId, minPrice, maxPrice, pageable);
     }
 
@@ -59,22 +64,23 @@ public class ProductService {
         }
 
         try {
-            String uploadDir = "src/main/resources/static/asset/uploads/";
-            java.io.File directory = new java.io.File(uploadDir);
+            String projectPath = "src/main/resources/static/asset/uploads/";
 
-            if (!directory.exists()) {
-                directory.mkdirs();
-            }
+            // luu vao target
+            String buildPath = "target/classes/static/asset/uploads/";
 
             String fileName = imageFile.getOriginalFilename();
-            java.nio.file.Path filePath = java.nio.file.Paths.get(uploadDir + fileName);
 
-            // neu url da ton tai
-            if (java.nio.file.Files.exists(filePath)) {
-                return "/asset/uploads/" + fileName;
-            }
-            // luu moi
-            java.nio.file.Files.copy(imageFile.getInputStream(), filePath,
+            // Tạo thư mục nếu chưa có
+            new java.io.File(projectPath).mkdirs();
+            new java.io.File(buildPath).mkdirs();
+
+            java.nio.file.Path pathInProject = java.nio.file.Paths.get(projectPath + fileName);
+            java.nio.file.Path pathInBuild = java.nio.file.Paths.get(buildPath + fileName);
+
+            java.nio.file.Files.copy(imageFile.getInputStream(), pathInProject,
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            java.nio.file.Files.copy(imageFile.getInputStream(), pathInBuild,
                     java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
             return "/asset/uploads/" + fileName;
@@ -84,65 +90,142 @@ public class ProductService {
         }
     }
 
-    // Lưu sản phẩm mới vào database
-    public void saveProduct(Product product, MultipartFile imageFile) {
-        // 1. Kiểm tra SKU
-        if (product.getSkuCode() != null && productRepository.existsBySkuCode(product.getSkuCode())) {
-            throw new RuntimeException("Mã SKU '" + product.getSkuCode() + "' đã tồn tại!");
+    // Phương thức lõi: Tính số kiểm tra cho 12 chữ số đầu tiên
+    private int calculateEAN13CheckDigit(String code12) {
+        int sum = 0;
+        for (int i = 0; i < 12; i++) {
+            int digit = Character.getNumericValue(code12.charAt(i));
+            // Vị trí lẻ (1, 3, 5...) nhân 1, vị trí chẵn (2, 4, 6...) nhân 3
+            sum += (i % 2 == 0) ? digit : digit * 3;
+        }
+        int mod = sum % 10;
+        return (mod == 0) ? 0 : 10 - mod;
+    }
+
+    private boolean isValidEAN13(String barcode) {
+        if (barcode == null || !barcode.matches("\\d{13}")) {
+            return false;
+        }
+        String code12 = barcode.substring(0, 12);
+        int expectedCheckDigit = calculateEAN13CheckDigit(code12);
+        int actualCheckDigit = Character.getNumericValue(barcode.charAt(12));
+
+        return expectedCheckDigit == actualCheckDigit;
+    }
+
+    // 2. Tái sử dụng để Sinh mã (EAN-13 bắt đầu bằng 20 - mã nội bộ)
+    private String generateEAN13() {
+        StringBuilder code12 = new StringBuilder("20"); // Tiền tố mã nội bộ
+        Random random = new Random();
+        for (int i = 0; i < 10; i++) {
+            code12.append(random.nextInt(10));
+        }
+        int checkDigit = calculateEAN13CheckDigit(code12.toString());
+        return code12.toString() + checkDigit;
+    }
+
+    public String generateUniqueBarcode() {
+        String barcode;
+        do {
+            barcode = generateEAN13();
+        } while (productRepository.existsByBarCode(barcode));
+        return barcode;
+    }
+
+    private void validateUniqueness(String skuCode, String barCode, Long excludeId) {
+        if (skuCode != null) {
+            boolean skuExists = (excludeId == null)
+                    ? productRepository.existsBySkuCode(skuCode)
+                    : productRepository.existsBySkuCodeAndIdNot(skuCode, excludeId);
+            if (skuExists)
+                throw new RuntimeException("Mã SKU '" + skuCode + "' đã tồn tại!");
         }
 
-        // 2. Kiểm tra Barcode
-        if (product.getBarCode() != null && productRepository.existsByBarCode(product.getBarCode())) {
-            throw new RuntimeException("Mã Vạch '" + product.getBarCode() + "' đã bị trùng!");
+        if (barCode != null) {
+            if (!isValidEAN13(barCode))
+                throw new RuntimeException("Mã Vạch không hợp lệ (Sai định dạng hoặc số kiểm tra)!");
+
+            boolean barCodeExists = (excludeId == null)
+                    ? productRepository.existsByBarCode(barCode)
+                    : productRepository.existsByBarCodeAndIdNot(barCode, excludeId);
+            if (barCodeExists)
+                throw new RuntimeException("Mã Vạch '" + barCode + "' đã bị trùng!");
         }
-        // 3. Xử lý lưu ảnh
+    }
+
+    private ProductStatus determineStatusByInventory(Product product, int totalQuantity) {
+        if (product.getStatus() == ProductStatus.INACTIVE) {
+            return ProductStatus.INACTIVE;
+        }
+        if (totalQuantity <= 0) {
+            return ProductStatus.OUT_OF_STOCK;
+        }
+        Integer minStockLevel = product.getMinStockLevel();
+        if (minStockLevel != null && totalQuantity <= minStockLevel) {
+            return ProductStatus.LOW_STOCK;
+        }
+        return ProductStatus.ACTIVE;
+    }
+
+    public void updateStatusIfNeeded(Product product, int totalQuantity) {
+        ProductStatus newStatus = determineStatusByInventory(product, totalQuantity);
+        if (product.getStatus() != newStatus) {
+            product.setStatus(newStatus);
+            productRepository.save(product);
+        }
+    }
+
+    // luu san pham
+    public Product saveProduct(Product product, MultipartFile imageFile) {
+        validateUniqueness(product.getSkuCode(), product.getBarCode(), null);
+
+        if (product.getUnit() == null || product.getUnit().trim().isEmpty()) {
+            product.setUnit("Cái");
+        }
+        if (product.getWarrantyMonths() == null) {
+            product.setWarrantyMonths(0);
+        }
+        if (product.getMinStockLevel() == null) {
+            product.setMinStockLevel(0);
+        }
+        if (product.getTaxRate() == null) {
+            product.setTaxRate(new java.math.BigDecimal("10.00"));
+        }
+
         String imageUrl = saveImage(imageFile);
-        if (imageUrl != null) {
+        if (imageUrl != null)
             product.setImgURL(imageUrl);
-        }
 
-        productRepository.save(product);
-
+        return productRepository.save(product);
     }
 
     public void updateProduct(Product product, MultipartFile imageFile) {
-        // 1. Lấy dữ liệu cũ từ DB (BẮT BUỘC)
         Product existingProduct = productRepository.findById(product.getId())
                 .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại!"));
 
-        // 2. Check trùng SKU (Chỉ check nếu user thay đổi SKU mới)
-        if (!existingProduct.getSkuCode().equals(product.getSkuCode())) {
-            if (productRepository.existsBySkuCode(product.getSkuCode())) {
-                throw new RuntimeException("Mã SKU mới '" + product.getSkuCode() + "' đã bị trùng!");
-            }
-        }
+        validateUniqueness(product.getSkuCode(), product.getBarCode(), product.getId());
 
-        // 3. Check trùng Barcode (Tương tự SKU)
-        if (!existingProduct.getBarCode().equals(product.getBarCode())) {
-            if (productRepository.existsByBarCode(product.getBarCode())) {
-                throw new RuntimeException("Mã Vạch mới '" + product.getBarCode() + "' đã bị trùng!");
-            }
-        }
+        if (imageFile != null && !imageFile.isEmpty())
+            existingProduct.setImgURL(saveImage(imageFile));
 
-        // 4. Logic xử lý ảnh cho Update
-        if (imageFile != null && !imageFile.isEmpty()) {
-            // Nếu có ảnh mới -> Lưu ảnh mới và cập nhật URL
-            String newFileName = saveImage(imageFile); // Tách code lưu ảnh ra hàm riêng cho sạch
-            existingProduct.setImgURL(newFileName);
-        }
-        // 4. Cập nhật các thông tin khác
-        existingProduct.setName(product.getName());
-        existingProduct.setBasePrice(product.getBasePrice());
-        existingProduct.setQuantityStock(product.getQuantityStock());
-        existingProduct.setSkuCode(product.getSkuCode());
-        existingProduct.setBarCode(product.getBarCode());
-        existingProduct.setReservedQuantity(product.getReservedQuantity());
-        existingProduct.setDescription(product.getDescription());
-        existingProduct.setStatus(product.getStatus());
-        existingProduct.setCategory(product.getCategory());
-
-        // 5. Lưu đối tượng đã cập nhật
+        updateFields(existingProduct, product);
         productRepository.save(existingProduct);
+    }
+
+    private void updateFields(Product target, Product source) {
+        target.setName(source.getName());
+        target.setBasePrice(source.getBasePrice());
+        target.setUnit(source.getUnit());
+        target.setBrand(source.getBrand());
+        target.setWarrantyMonths(source.getWarrantyMonths());
+        target.setMinStockLevel(source.getMinStockLevel());
+        target.setTaxRate(source.getTaxRate());
+        target.setTechnicalSpecs(source.getTechnicalSpecs());
+        target.setSkuCode(source.getSkuCode());
+        target.setBarCode(source.getBarCode());
+        target.setDescription(source.getDescription());
+        target.setStatus(source.getStatus());
+        target.setCategory(source.getCategory());
     }
 
     public void deleteProduct(Long id) {
@@ -151,5 +234,17 @@ public class ProductService {
         } else {
             throw new RuntimeException("Sản phẩm không tồn tại.");
         }
+    }
+
+    // xu ly so luon ton kho tong
+    public List<Product> getAllProductsWithInventory() {
+        List<Product> products = productRepository.findAll();
+        for (Product p : products) {
+            Integer total = importBatchRepository.sumQuantityByProductId(p.getId());
+            int qty = total != null ? total : 0;
+            p.setTotalQuantity(qty); // set vào trường @Transient
+            updateStatusIfNeeded(p, qty);
+        }
+        return products;
     }
 }

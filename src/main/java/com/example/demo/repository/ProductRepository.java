@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.example.demo.entity.Product;
+import com.example.demo.entity.Product.Product;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
@@ -15,9 +15,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
         boolean existsByBarCode(String barCode);
 
+        boolean existsBySkuCodeAndIdNot(String skuCode, Long id);
+
+        boolean existsByBarCodeAndIdNot(String barCode, Long id);
+
         @Query("SELECT p FROM Product p WHERE " +
                         "(:kw IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :kw, '%')) " +
                         "OR LOWER(p.skuCode) LIKE LOWER(CONCAT('%', :kw, '%')) " +
+                        "OR LOWER(p.brand) LIKE LOWER(CONCAT('%', :kw, '%')) " +
                         "OR p.barCode LIKE CONCAT('%', :kw, '%')) " +
                         "AND (:pId IS NULL OR p.category.parent.id = :pId) " +
                         "AND (:cId IS NULL OR p.category.id = :cId) " +
@@ -29,4 +34,5 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                         @Param("minP") Double minP,
                         @Param("maxP") Double maxP,
                         Pageable pageable);
+
 }

@@ -1,8 +1,8 @@
-package com.example.demo.entity;
+package com.example.demo.entity.Product;
 
 public enum ProductStatus {
     ACTIVE,
     INACTIVE,
-    DISCONTINUED,
+    LOW_STOCK,
     OUT_OF_STOCK
 }

@@ -8,7 +8,8 @@
       <div th:replace="~{fragments :: sidebar}"></div>
       <main class="flex-grow-1 p-4 overflow-y-auto bg-light h-100">
         <h1>Thông Tin Sản Phẩm</h1>
-        <!--name phai khop voi field-->
+        <hr />
+
         <div
           th:if="${errorMessage}"
           class="alert alert-danger alert-dismissible fade show"
@@ -22,24 +23,33 @@
             aria-label="Close"
           ></button>
         </div>
+
         <form
           id="productForm"
-          th:action="${product.id != null ? '/products/edit/' + product.id : '/products/add'}"
+          th:action="${product.id != null} ? @{/products/edit/{id}(id=${product.id})} : @{/products/add}"
+          th:object="${product}"
           method="post"
           enctype="multipart/form-data"
         >
-          <input type="hidden" name="id" th:value="${product.id}" />
-          <!-- <div class="row mb-3"> -->
+          <input type="hidden" name="action" id="formAction" value="save" />
+          <input type="hidden" th:field="*{id}" />
+
+          <h4 class="mb-3 text-primary border-bottom pb-2">
+            1. Thông Tin Cơ Bản
+          </h4>
+          <div class="alert alert-info py-2">
+            <i class="bi bi-info-circle"></i> Nhập thông tin cơ bản của sản
+            phẩm. Những trường này giúp định danh và quản lý sản phẩm.
+          </div>
+
           <div class="mb-3">
-            <!-- class="col-md-6" -->
-            <label for="name" class="form-label">Tên Sản Phẩm *</label>
+            <label for="productName" class="form-label">Tên Sản Phẩm *</label>
             <input
               type="text"
               class="form-control"
-              id="name"
-              name="name"
-              th:value="${product.name}"
-              placeholder="Nhập tên sản phẩm... "
+              id="productName"
+              th:field="*{name}"
+              placeholder="Nhập tên sản phẩm..."
               required
             />
           </div>
@@ -64,7 +74,6 @@
                 ></option>
               </select>
             </div>
-
             <div class="col-md-6">
               <label for="productType" class="form-label"
                 >Loại Sản Phẩm *</label
@@ -97,9 +106,8 @@
                   id="checkNewCategory"
                 />
                 <label
-                  class="form-check-label"
+                  class="form-check-label fst-italic"
                   for="checkNewCategory"
-                  style="font-style: italic"
                 >
                   Thêm Ngành Hàng Mới:
                 </label>
@@ -125,12 +133,8 @@
                   type="checkbox"
                   id="checkNewType"
                 />
-                <label
-                  class="form-check-label"
-                  for="checkNewType"
-                  style="font-style: italic"
-                >
-                  Thêm Loại Sản Phẩm Mới:
+                <label class="form-check-label fst-italic" for="checkNewType">
+                  Thêm Loại SP Mới:
                 </label>
               </div>
             </div>
@@ -145,107 +149,68 @@
               />
             </div>
           </div>
+
           <div class="row mb-3">
-            <div class="col-12">
+            <div class="col-md-6">
               <label for="skuCode" class="form-label">Mã SKU *</label>
               <input
                 type="text"
                 id="skuCode"
-                name="skuCode"
+                th:field="*{skuCode}"
                 class="form-control"
-                placeholder="Ví dụ: LAP-APP-MBPM3-14"
-                th:value="${product.skuCode}"
+                placeholder="VD: LAP-APP-MBPM3-14"
+                required
               />
-              <div class="form-text">
-                Mã định danh duy nhất cho từng loại sản phẩm.
-              </div>
             </div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-12">
+            <div class="col-md-6">
               <label for="barCode" class="form-label"
                 >Mã Vạch (Barcode) *</label
               >
-              <input
-                type="text"
-                id="barCode"
-                name="barCode"
-                class="form-control"
-                th:value="${product.barCode}"
-                placeholder="Nhập mã vạch sản phẩm..."
-                required
-              />
-              <button
-                class="btn btn-outline-secondary mt-2"
-                type="button"
-                id="btnGenerateBarcode"
-              >
-                <i class="bi bi-qr-code"></i> Sinh mã
-              </button>
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="barCode"
+                  th:field="*{barCode}"
+                  class="form-control"
+                  placeholder="Nhập mã vạch..."
+                  required
+                />
+                <button
+                  class="btn btn-outline-secondary"
+                  type="button"
+                  id="btnGenerateBarcode"
+                >
+                  <i class="bi bi-qr-code"></i> Sinh mã
+                </button>
+              </div>
             </div>
           </div>
 
           <div class="row mb-3">
-            <div class="col-12">
-              <label for="status" class="form-label">Trạng Thái *</label>
-              <select class="form-select" id="status" name="status" required>
-                <option
-                  th:each="status : ${allStatuses}"
-                  th:value="${status}"
-                  th:text="${status}"
-                  th:selected="${product.status == status}"
-                ></option>
-              </select>
-            </div>
-          </div>
-
-          <div class="row mb-3">
-            <div class="col-12">
-              <label for="quantityStock" class="form-label"
-                >Số Lượng Tồn Kho</label
-              >
-              <input
-                type="number"
-                id="quantityStock"
-                name="quantityStock"
-                class="form-control"
-                placeholder="0"
-                min="0"
-                th:value="${product.quantityStock != null ? product.quantityStock : '0'}"
-              />
-            </div>
-          </div>
-
-          <div class="row mb-3">
-            <div class="col-12">
-              <label for="reservedQuantity" class="form-label"
-                >Số Lượng Đặt Trước</label
-              >
-              <input
-                type="number"
-                id="reservedQuantity"
-                name="reservedQuantity"
-                class="form-control"
-                placeholder="0"
-                value="0"
-                min="0"
-                th:value="${product.reservedQuantity != null ? product.reservedQuantity : '0'}"
-              />
-            </div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-12">
-              <label for="basePrice" class="form-label">Đơn Giá (VNĐ) </label>
+            <div class="col-md-6">
+              <label for="basePrice" class="form-label">Đơn Giá (VNĐ)</label>
               <input
                 type="number"
                 id="basePrice"
-                name="basePrice"
+                th:field="*{basePrice}"
                 class="form-control"
                 placeholder="0"
-                value="0"
                 min="0"
-                th:value="${product.basePrice != null ? product.basePrice : '0'}"
               />
+            </div>
+            <div class="col-md-6">
+              <label for="status" class="form-label fw-semibold"
+                >Trạng Thái *</label
+              >
+              <select
+                class="form-select"
+                id="status"
+                th:field="*{status}"
+                required
+              >
+                <option value="ACTIVE">Đang bán</option>
+                <option value="INACTIVE">Dừng bán</option>
+              </select>
             </div>
           </div>
 
@@ -254,20 +219,19 @@
               <label for="description" class="form-label">Mô tả</label>
               <textarea
                 id="description"
-                name="description"
+                th:field="*{description}"
                 class="form-control"
-                rows="4"
-                placeholder="Thông tin chi tiết về sản phẩm (không bắt buộc)"
-                th:text="${product.description}"
+                rows="3"
+                placeholder="Thông tin tổng quan về sản phẩm..."
               ></textarea>
             </div>
           </div>
+
           <div class="row mb-4">
             <div class="col-12">
               <label for="productImage" class="form-label"
                 >Hình ảnh sản phẩm</label
               >
-
               <input
                 class="form-control"
                 type="file"
@@ -275,7 +239,6 @@
                 name="productImage"
                 accept="image/*"
               />
-
               <button
                 type="button"
                 id="btnRemoveImage"
@@ -284,22 +247,125 @@
               >
                 Xóa file đã chọn
               </button>
+            </div>
+          </div>
+          <hr />
 
-              <div class="form-text mt-2">
-                Định dạng hỗ trợ: JPG, PNG, GIF. Dung lượng tối đa 2MB.
+          <div>
+            <h4 class="mb-3 mt-4 text-success border-bottom pb-2">
+              2. Thông tin chi tiết sản phẩm
+            </h4>
+            <div class="alert alert-info py-2">
+              <i class="bi bi-info-circle"></i> Nhập thông tin chi tiết sản phẩm
+              để hoàn thiện hồ sơ.
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="unit" class="form-label">Đơn vị tính *</label>
+                <input
+                  type="text"
+                  id="unit"
+                  th:field="*{unit}"
+                  class="form-control"
+                  placeholder="Cái, Hộp, Bộ..."
+                  required
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="brand" class="form-label">Thương hiệu</label>
+                <input
+                  type="text"
+                  id="brand"
+                  th:field="*{brand}"
+                  class="form-control"
+                  placeholder="Nhập thương hiệu..."
+                />
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="warrantyMonths" class="form-label"
+                  >Bảo hành (tháng)</label
+                >
+                <input
+                  type="number"
+                  id="warrantyMonths"
+                  th:field="*{warrantyMonths}"
+                  class="form-control"
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="minStockLevel" class="form-label"
+                  >Định mức tồn kho tối thiểu</label
+                >
+                <input
+                  type="number"
+                  id="minStockLevel"
+                  th:field="*{minStockLevel}"
+                  class="form-control"
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="taxRate" class="form-label"
+                  >Thuế suất VAT (%)</label
+                >
+                <input
+                  type="number"
+                  step="0.01"
+                  id="taxRate"
+                  th:field="*{taxRate}"
+                  class="form-control"
+                  placeholder="10.00"
+                  min="0"
+                />
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-12">
+                <label for="technicalSpecs" class="form-label"
+                  >Thông số kỹ thuật</label
+                >
+                <textarea
+                  id="technicalSpecs"
+                  th:field="*{technicalSpecs}"
+                  class="form-control"
+                  rows="4"
+                  placeholder="Nhập thông số kỹ thuật chi tiết của sản phẩm..."
+                ></textarea>
               </div>
             </div>
           </div>
-          <button
-            class="btn btn-danger mt-3 me-2"
-            type="button"
-            onclick="window.location.href = '/products/view'"
-          >
-            Hủy
-          </button>
-          <button type="submit" class="btn btn-primary mt-3">
-            Lưu Sản Phẩm
-          </button>
+
+          <div class="mt-4 pt-3 border-top">
+            <button
+              class="btn btn-secondary me-2"
+              type="button"
+              onclick="window.location.href = '/products/view'"
+            >
+              Hủy
+            </button>
+
+            <button
+              type="submit"
+              class="btn btn-primary"
+              onclick="document.getElementById('formAction').value = 'save'"
+            >
+              <span
+                th:text="${product.id != null ? 'Cập Nhật Sản Phẩm' : 'Lưu Sản Phẩm'}"
+                >Lưu</span
+              >
+            </button>
+          </div>
         </form>
       </main>
     </div>
